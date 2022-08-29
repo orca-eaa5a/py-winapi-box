@@ -17,6 +17,7 @@ from utils.parser import parse_xlogger_result
 
 class Agent(object):
     class ActionID:
+        INIT = 0
         CREATE_FILE=1
         CREATE_PROCESS=2
         GET_RESULT=3
@@ -60,6 +61,17 @@ class Agent(object):
         
         return False
 
+    def send_json_wrapper(self, data):
+        EOM = b'orca.eaa5a'
+        try:
+            _data = json.dumps(data).encode("utf-8")
+            _data += EOM
+            self.sock.send(_data)
+        except json.JSONDecodeError:
+            self.logger.error("json parsing error > %s" % str(data))
+        except Exception as e:
+            self.logger.error("send data faield with error > %s" % e)
+
     def launch(self):
         if not self.connect_to_server():
             self.logger.critical("Connection to server failed.. %s:%d" % (self.server_ip, self.port))
@@ -71,11 +83,12 @@ class Agent(object):
         server_init_msg = {
             "ip": self.sock.getsockname()[0],
             "_timestap": time(),
-            "action": "init"
+            "action": Agent.ActionID.INIT
         }
-        self.sock.send(
-            json.dumps(server_init_msg).encode("utf-8")
+        self.send_json_wrapper(
+            server_init_msg
         )
+        
         self.listener()
         self.sock.close()
 
@@ -123,13 +136,16 @@ class Agent(object):
                 self.logger.critical("Unable to write file to %s" % path)
                 return -1
 
-            self.sock.send(json.dumps({
-                "ip": self.sock.getsockname()[0],
-                "_timestamp": time(),
-                "action": "upload file",
-                "success": True,
-                "file_sz": len(_bin)
-            }).encode("utf-8"))
+            self.send_json_wrapper(
+                {
+                    "ip": self.sock.getsockname()[0],
+                    "_timestamp": time(),
+                    "action": action_id,
+                    "success": True,
+                    "target": data['fname'],
+                    "file_sz": len(_bin)
+                }
+            )
 
         elif action_id == Agent.ActionID.CREATE_PROCESS:
             def check_platform(_bin):
@@ -162,14 +178,16 @@ class Agent(object):
                     _bin = f.read(1024)
             except FileNotFoundError as fne:
                 self.logger.error("Can't find target file to launch : %s" % path)
-                self.sock.send(json.dumps({
-                    "ip": self.sock.getsockname()[0],
-                    "_timestamp": time(),
-                    "action": "launch process",
-                    "success": False,
-                    "path": path,
-                    "err": "file does not exist"
-                }).encode("utf-8"))
+                self.send_json_wrapper(
+                    {
+                        "ip": self.sock.getsockname()[0],
+                        "_timestamp": time(),
+                        "action": action_id,
+                        "success": False,
+                        "target": data['fname'],
+                        "err": "file does not exist"
+                    }
+                )
                 return -1
             command_line = ""
 
@@ -180,14 +198,16 @@ class Agent(object):
             elif "64bit" == plt:
                 command_line = self.get_commandline("x64", path, log_path)
             else:
-                self.sock.send(json.dumps({
-                    "ip": self.sock.getsockname()[0],
-                    "_timestamp": time(),
-                    "action": "launch process",
-                    "success": False,
-                    "path": path,
-                    "err": "unknown platform to launch"
-                }).encode("utf-8"))
+                self.send_json_wrapper({
+                    {
+                        "ip": self.sock.getsockname()[0],
+                        "_timestamp": time(),
+                        "action": action_id,
+                        "success": False,
+                        "target": data['fname'],
+                        "err": "unknown platform to launch"
+                    }
+                })
                 return -1
             
             """
@@ -200,12 +220,15 @@ class Agent(object):
                 proc.terminate()
                 self.logger.debug("subprocess killed with time exceeded (pid : %d)" % proc.pid)
 
-            self.sock.send(json.dumps({
-                "ip": self.sock.getsockname()[0],
-                "_timestamp": time(),
-                "action": "launch process",
-                "success": True
-            }).encode("utf-8"))
+            self.send_json_wrapper(
+                {
+                    "ip": self.sock.getsockname()[0],
+                    "_timestamp": time(),
+                    "action": action_id,
+                    "success": True,
+                    "target": data['fname']
+                }
+            )
         
         elif action_id == Agent.ActionID.GET_RESULT:
             # prasing execution result
@@ -214,34 +237,43 @@ class Agent(object):
                 apis = parse_xlogger_result(log_path)
             except FileNotFoundError as fne:
                 self.logger.error("Api log file is not exist (%s)" % log_path)
-                self.sock.send(json.dumps({
-                    "ip": self.sock.getsockname()[0],
-                    "_timestamp": time(),
-                    "action": "get api log",
-                    "success": False,
-                    "err": ("api log file is not exist (%s)" % log_path)
-                }).encode("utf-8"))
+                self.send_json_wrapper(
+                    {
+                        "ip": self.sock.getsockname()[0],
+                        "_timestamp": time(),
+                        "action": action_id,
+                        "success": False,
+                        "target": data['fname'],
+                        "err": ("api log file is not exist (%s)" % log_path)
+                    }
+                )
+                
                 return -1
 
-            self.sock.send(json.dumps({
-                "ip": self.sock.getsockname()[0],
-                "_timestamp": time(),
-                "action": "get api log",
-                "success": True,
-                "data": apis['apis']
-            }).encode("utf-8"))
+            self.send_json_wrapper(
+                {
+                    "ip": self.sock.getsockname()[0],
+                    "_timestamp": time(),
+                    "action": action_id,
+                    "success": True,
+                    "target": data['fname'],
+                    "data": apis['apis']
+                }
+            )
         
         elif action_id == Agent.ActionID.HALT:
             try:
                 os.remove(self.apilog)
             except FileNotFoundError as fne:
                 pass
-            self.sock.send(json.dumps({
-                "ip": self.sock.getsockname()[0],
-                "_timestamp": time(),
-                "action": "halt",
-                "success": True
-            }).encode("utf-8"))
+            self.send_json_wrapper(
+                {
+                    "ip": self.sock.getsockname()[0],
+                    "_timestamp": time(),
+                    "action": action_id,
+                    "success": True
+                }
+            )
             exit(-1)
 
         elif action_id == Agent.ActionID.GET_FILE_LIST:
@@ -250,13 +282,15 @@ class Agent(object):
             except FileNotFoundError as fne:
                 self.logger.critical("Share directory %s not exist" % self.default_folder)
                 raise FileNotFoundError(fne)
-            self.sock.send(json.dumps({
-                "ip": self.sock.getsockname()[0],
-                "_timestamp": time(),
-                "action": "get-files",
-                "success": True,
-                "data": [file for file in files if (file.endswith('.dll') or file.endswith('.exe'))]
-            }).encode("utf-8"))
+            self.send_json_wrapper(
+                {
+                    "ip": self.sock.getsockname()[0],
+                    "_timestamp": time(),
+                    "action": action_id,
+                    "success": True,
+                    "data": [file for file in files if (file.endswith('.dll') or file.endswith('.exe'))]
+                }
+            )
 
         self.logger.debug("action_handler handled action %d successfully!" % action_id)
 

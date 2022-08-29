@@ -1,10 +1,12 @@
 import os
 import json
 import socket
+import threading
 from utils.agent_logger import AgentLogger
 
 class AgentManager(object):
     class ActionID:
+        INIT = 0
         CREATE_FILE=1
         CREATE_PROCESS=2
         GET_RESULT=3
@@ -15,8 +17,14 @@ class AgentManager(object):
         self.server_ip = server_ip
         self.port = port
         self.connection = None
-        self.data_queue = []
-        
+        self.data_queue = {
+            AgentManager.ActionID.CREATE_FILE: [],
+            AgentManager.ActionID.CREATE_PROCESS: [],
+            AgentManager.ActionID.GET_RESULT: [],
+            AgentManager.ActionID.HALT: [],
+            AgentManager.ActionID.GET_FILES_LIST: [],
+        }
+        self.job_evt = threading.Event()
         self.logger = AgentLogger().logger
         self.ssock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         
@@ -27,7 +35,7 @@ class AgentManager(object):
         self.ssock.bind((self.server_ip, self.port))
         self.ssock.listen(1)
 
-    def close_server(self, **args):
+    def close_server(self, *args):
         if not args:
             self.logger.info("Server closed")
         else:
@@ -38,7 +46,28 @@ class AgentManager(object):
         self.logger.info("Client %s connection closed" % self.connection.getsockname[0])
         self.connection.close()
 
+    def recv_json_wrapper(self):
+        EOM = b'orca.eaa5a'
+        EOM_OFFSET = int(-1*len(EOM))
+        try:
+            data = b''
+            while True:
+                data += self.connection.recv(1024)
+                if not data:
+                    break
+                if data[EOM_OFFSET:] == EOM:
+                    data = data[:EOM_OFFSET]
+                    break
+            return json.loads(data.decode("utf-8"))
+        except json.JSONDecodeError:
+            self.logger.error("invalid json format %s" % str(data))
+        except Exception as e:
+            self.logger.error("recv failed with error %s" % e)
+        return None
+
     def send_command(self, action, data):
+        if self.job_evt.isSet():
+            return -2
         try:
             body = {'data': {}}
             body['act_id'] = action
@@ -65,7 +94,8 @@ class AgentManager(object):
             self.connection.send(json.dumps(body).encode("utf-8"))
             if action == AgentManager.ActionID.CREATE_FILE:
                 self.connection.send(data['raw'])
-
+            self.job_evt.wait()
+            self.job_evt.clear()
             return 0
 
         except ConnectionResetError as cre:
@@ -80,11 +110,18 @@ class AgentManager(object):
             self.connection, addr = self.ssock.accept()
             while True:
                 try:
-                    data = self.connection.recv(1024)
+                    data = self.recv_json_wrapper()
                     if not data:
+                        self.logger.info("Client %s connection closed" % self.connection.getsockname()[0])
                         self.connection.close()
                         break
-                    self.logger.debug("Server recv msg : %s" % data.decode("utf-8"))
+                    if data['action'] == AgentManager.ActionID.INIT:
+                        self.logger.info("Client %s connected" % self.connection.getsockname()[0])
+                    else:
+                        self.data_queue[data['action']].append(
+                            data
+                        )
+                        self.job_evt.set()
                 except ConnectionResetError as cre:
                     self.logger.error("Client %s connection closed" % self.connection.getsockname()[0])
                     break
