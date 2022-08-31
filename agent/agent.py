@@ -14,6 +14,7 @@ from threading import Thread
 import subprocess
 from utils.agent_logger import AgentLogger
 from utils.parser import parse_xlogger_result
+from utils.meta import get_file_meta
 
 class Agent(object):
     class ActionID:
@@ -22,7 +23,8 @@ class Agent(object):
         CREATE_PROCESS=2
         GET_RESULT=3
         HALT=4
-        GET_FILE_LIST=5
+        GET_FILES_LIST=5
+        EXTRACT_FILE=6
 
     def __init__(self, server_ip, port) -> None:
         self.logger = AgentLogger().logger
@@ -276,23 +278,77 @@ class Agent(object):
             )
             exit(-1)
 
-        elif action_id == Agent.ActionID.GET_FILE_LIST:
+        elif action_id == Agent.ActionID.GET_FILES_LIST:
             try:
                 files = os.listdir(self.default_folder)
             except FileNotFoundError as fne:
                 self.logger.critical("Share directory %s not exist" % self.default_folder)
                 raise FileNotFoundError(fne)
+            data = []
+            for file in files:
+                full_p = os.path.join(self.default_folder, file)
+                meta = get_file_meta(full_p)
+                meta['fname'] = file
+                data.append(meta)
             self.send_json_wrapper(
                 {
                     "ip": self.sock.getsockname()[0],
                     "_timestamp": time(),
                     "action": action_id,
                     "success": True,
-                    "data": [file for file in files if (file.endswith('.dll') or file.endswith('.exe'))]
+                    "data": data
                 }
             )
 
+        elif action_id == Agent.ActionID.EXTRACT_FILE:
+            targ = data['fname']
+            data_port = data['port']
+            _bin = b''
+            file_exist = False
+            try:
+                files = os.listdir(self.default_folder)
+            except FileNotFoundError as fne:
+                self.logger.critical("Share directory %s not exist" % self.default_folder)
+                raise FileNotFoundError(fne)
+            if targ not in files:
+                # maybe full path
+                if os.path.exists(targ):
+                    file_exist = True
+            else:
+                targ = os.path.join(self.default_folder, targ)
+                file_exist = True
+
+            if not file_exist:
+                self.send_json_wrapper(
+                    {
+                        "ip": self.sock.getsockname()[0],
+                        "_timestamp": time(),
+                        "action": action_id,
+                        "success": False,
+                        "err": 'requested file does not exist'
+                    }
+                )
+                return -1
+            else:
+                self.send_json_wrapper(
+                    {
+                        "ip": self.sock.getsockname()[0],
+                        "_timestamp": time(),
+                        "action": action_id,
+                        "success": True
+                    }
+                )
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as data_sock:
+                    try:
+                        data_sock.connect((self.server_ip, data_port))
+                        with open(targ, 'rb') as f:
+                            data_sock.sendfile(f)
+                        data_sock.close()
+                    except Exception as e:
+                        self.logger.error("send file error with %s" % e)
+
         self.logger.debug("action_handler handled action %d successfully!" % action_id)
+        return 0
 
     def get_commandline(self, platform, target, log_path):
         # xLogger.exe --apis-dir "..\\WinApi" --headers-dir "..\\WinAPI\\headers"  -c C:\\Windows\\System32\\notepad.exe -l "..\..\log.txt"

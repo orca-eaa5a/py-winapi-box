@@ -35,7 +35,7 @@ def upload():
         return '507 Another job is running'
     elif r == -1:
         return '400 Bad request'
-    data = agent_man.data_queue[agent_man.ActionID.CREATE_FILE].pop(0)
+    data = agent_man.action_queue[agent_man.ActionID.CREATE_FILE]['data'].pop(0)
     return data
 
 @app.route('/exec/<program>')
@@ -51,10 +51,10 @@ def execute(program):
         return '507 Another job is running'
     elif r == -1:
         return '400 Bad request'
-    data = agent_man.data_queue[agent_man.ActionID.CREATE_PROCESS].pop(0)
+    data = agent_man.action_queue[agent_man.ActionID.CREATE_PROCESS]['data'].pop(0)
     return data
 
-@app.route('/get-log/<program>')
+@app.route('/log/<program>')
 def get_winapi(program):
     agent_man = app.config['agent-man']
     r = agent_man.send_command(
@@ -66,7 +66,38 @@ def get_winapi(program):
         return '507 Another job is running'
     elif r == -1:
         return '400 Bad request'
-    data = agent_man.data_queue[agent_man.ActionID.GET_RESULT].pop(0)
+    data = agent_man.action_queue[agent_man.ActionID.GET_RESULT]['data'].pop(0)
+    return data
+
+@app.route('/files')
+def get_files():
+    agent_man = app.config['agent-man']
+    r = agent_man.send_command(
+        action=agent_man.ActionID.GET_FILES_LIST,
+        data={}
+        )
+    if r == -2:
+        return '507 Another job is running'
+    elif r == -1:
+        return '400 Bad request'
+    data = agent_man.action_queue[agent_man.ActionID.GET_FILES_LIST]['data'].pop(0)
+    
+    return data
+
+@app.route('/extract')
+def extract_files():
+    agent_man = app.config['agent-man']
+    r = agent_man.send_command(
+        action=agent_man.ActionID.EXTRACT_FILE,
+        data={'fname': "createprocess.exe"}
+        )
+
+    if r == -2:
+        return '507 Another job is running'
+    elif r == -1:
+        return '400 Bad request'
+
+    data = agent_man.action_queue[agent_man.ActionID.EXTRACT_FILE]['data'].pop(0)
     return data
 
 @app.route('/halt')
@@ -81,7 +112,7 @@ def halt_agent():
         return '507 Another job is running'
     elif r == -1:
         return '400 Bad request'
-    data = agent_man.data_queue[agent_man.ActionID.HALT].pop(0)
+    data = agent_man.action_queue[agent_man.ActionID.HALT]['data'].pop(0)
     return data
 
 if __name__ == '__main__':
