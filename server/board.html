@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WinAPI SandBox</title>
+    <link href="public/css/styles.css" rel="stylesheet" />
+    <link href="public/include/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="public/css/main.css" rel="stylesheet"/>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">WinAPI Sandbox</a>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Upload</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-2 pt-3 pb-3">
+                <div class="card files-list-card">
+                    <div class="card-header">
+                        <h5 style="font-size:13pt; text-align: center; margin-bottom: 0px;">
+                            Files
+                        </h5>
+                    </div>
+                    <div class="card-body" style="padding: 0 !important;">
+                        <ul class="list-group" style="border-radius: 0 !important;">
+                            <li class="list-group-item">Cras justo odio</li>
+                            <li class="list-group-item">Dapibus ac facilisis in</li>
+                            <li class="list-group-item">Morbi leo risus</li>
+                            <li class="list-group-item">Porta ac consectetur ac</li>
+                            <li class="list-group-item">Vestibulum at eros</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-10 pt-3 pb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <form>
+                            <div class="row">
+                                <div class="col">
+                                    <input class="form-control form-control-md" type="text">
+                                </div>
+                                <div class="col-auto">
+                                    <button class="btn btn-primary btn-md btn-fixed">실행</button>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="row">
+                            <div class="col">
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+<script src="http://code.jquery.com/jquery-1.4.4.min.js"></script>
+<script src="public/include/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script>
+    $(document).ready(function(){
+        $.get("/files", function(data, status){
+            console.log(data, status);
+            console.log('[GET] localhost:5000/files');
+        });
+        
+    })
+</script>
+</html>
