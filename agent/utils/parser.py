@@ -28,9 +28,10 @@ def parsing(chunk):
         }
         for l in lines[1:-1]:
             parsed = parse("        {arg_type} {remain} = {value}", l)
-            arg['type'] = parsed['arg_type']
-            arg['value'] = parsed['value']
-            result['args'].append(arg)
+            result['args'].append({
+                'type':parsed['arg_type'],
+                'value':parsed['value']
+            })
     parsed = parse("{remain} -> {ret} [{remain2}", lines[-1])
     result['ret'] = parsed['ret']
     

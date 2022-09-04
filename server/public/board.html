@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WinAPI SandBox</title>
+    <link href="public/css/styles.css" rel="stylesheet" />
+    <link href="public/include/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="public/css/main.css" rel="stylesheet"/>
+
+    <script src="http://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+    <link href="public/include/json-viewer/jquery.json-viewer.css" type="text/css" rel="stylesheet">
+    <script src="public/include/json-viewer/jquery.json-viewer.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">WinAPI Sandbox</a>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" onclick="modal_show('#upload-modal')" data-toggle="modal" href="#">Upload</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-2 pt-3 pb-3">
+                <div class="card files-list-card">
+                    <div class="card-header">
+                        <h5 style="font-size:13pt; text-align: center; margin-bottom: 0px;">
+                            Files
+                        </h5>
+                    </div>
+                    <div class="card-body" style="padding: 0 !important;">
+                        <ul id="file-list" class="list-group" style="border-radius: 0 !important;">
+                            
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-10 pt-3 pb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <form>
+                            <div class="row">
+                                <div class="col">
+                                    <input id="target-file" class="form-control form-control-md" type="text">
+                                </div>
+                                <div class="col-auto">
+                                    <button type="button" class="btn btn-primary btn-md btn-fixed" onclick="execute_btn_click()">실행</button>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="row">
+                            <div class="col">
+                                <div class="card mt-3">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-4">
+                                                <div class="input-group mb-3">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text">File Name</span>
+                                                    </div>
+                                                    <span class="form-control" id="selectedFileName"></span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-3">
+                                                <div class="input-group mb-3">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text">File Type</span>
+                                                    </div>
+                                                    <span class="form-control" id="selectedFileType"></span>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-4">
+                                                <div class="input-group mb-3">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text">File Size</span>
+                                                    </div>
+                                                    <span class="form-control" id="selectedFileSize"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="input-group mb-3">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text">Ctime</span>
+                                                    </div>
+                                                    <span class="form-control" id="selectedFileCtime"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="input-group mb-3">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text">Mtime</span>
+                                                    </div>
+                                                    <span class="form-control" id="selectedFileMtime"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-8">
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text">File Hash</span>
+                                                    </div>
+                                                    <input class="form-control hashform" id="selectedFileHash" disabled="true" value="">
+                                                    <span class="input-group-copy" onclick="hash_copy_to_clipboard()"><img src="public/assets/img/copy.png"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <div class="card mt-3">
+                                    <div class="card-body">
+                                        <pre style="max-height: 600px;" id="json-viewer"></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="upload-modal" tabindex="-1" role="dialog"  aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">분석 파일 선택</h5>
+                </div>
+                <div class="modal-body">
+                    <input class="form-control form-control-lg" id="selected_file_name" type="text" placeholder="File Path" />
+                    <div style="display: flex;
+                    /* align-items: end; */
+                    width: 100%;
+                    justify-content: end;
+                    padding: 10px 0px 0px;">
+                        <label for="target_exec" class="btn btn-primary btn-sm">파일 선택</label>
+                    <input style="display: none;" type="file" id="target_exec" name="target" onclick="execute_btn_click()">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="modal_hide('#upload-modal')">Close</button>
+                    <button type="button" class="btn btn-primary">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+<script src="public/include/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script>
+    let files = null;
+
+    function modal_show(target){
+        $(target).modal('show')
+    }
+    function modal_hide(target){
+        $(target).modal('hide')
+    }
+
+    function render_json_with_input(input) {
+        var options = {
+            collapsed: $('#collapsed').is(':checked'),
+            rootCollapsable: $('#root-collapsable').is(':checked'),
+            withQuotes: $('#with-quotes').is(':checked'),
+            withLinks: $('#with-links').is(':checked')
+        };
+        try{
+            $('#json-viewer').jsonViewer(input, options);
+        }catch(err){
+            console.log(err);
+        }
+        
+        return null;
+    }
+
+    function list_group_item_click(elem){
+        let file_hash = elem.getAttribute('hash');
+        for(child of $('#file-list').children()){
+            if($(child).hasClass('active')){
+                $(child).removeClass('active');
+                break;
+            }
+        }
+        $(elem).addClass('active');
+        $('#target-file').val(elem.getAttribute('fname'));
+        $('#target-file').attr('file-hash', file_hash);
+        
+        for(f of files){
+            if(f.hash === file_hash){
+                $('#selectedFileName').text(f.fname);
+                $('#selectedFileSize').text(f.size);
+                $('#selectedFileCtime').text(f.c_time);
+                $('#selectedFileMtime').text(f.m_time);
+                $('#selectedFileHash').attr('value', file_hash);
+                break;
+            }
+        }
+    }
+
+    function hash_copy_to_clipboard(){
+        $('#selectedFileHash').select();
+        document.execCommand('copy');
+        alert('hash value is copied to clipboard');
+    }
+
+    function execute_btn_click(){
+        let hash = $('#target-file').attr('file-hash');
+        let target_file = "";
+        for(f of files){
+            if(f.hash === hash){
+                target_file = f.fname;
+                break
+            }
+        }
+        if(!target_file){
+            alert('select file first');
+            return;
+        }
+        fetch("/exec/"+target_file)
+        .then((response) => response.json())
+        .then((data) => {
+            if(data.success === true){
+                fetch("/log/" + target_file)
+                .then((response) => response.json())
+                .then((data) => {
+                    if(data.success === true){
+                        render_json_with_input(data.data);
+                    }
+                    else{
+                        alert("[localhost:5000/log/"+target_file+"] fail to get api log");
+                    }
+                });
+            }
+            else{
+                alert("[localhost:5000/exec/"+target_file+"] fail to execute file");
+            }
+        })
+        
+        // $.get("/exec/"+target_file, function(data, status){
+        //     console.log(data, status);
+        //     if(status === 'success' && data.success == true){
+        //         $.get("/log"+target_file, function(data, status){
+        //             if(status === 'success' && data.success == true){
+        //                 render_json_with_input(data.data);
+        //             }
+        //             else{
+        //                 console.log('get log '+target_file+' failed');
+        //             }
+        //         });
+        //     }else{
+        //         console.log('execute '+target_file+' failed');
+        //     }
+        // });
+    }
+
+    $(document).ready(function(){
+        let ico_dict = {
+            'pe': "public/assets/img/executable.png",
+            'dir': "public/assets/img/directory.png",
+            'bat': "public/assets/img/bat.png",
+            'unk': "public/assets/img/unk_file.png",
+        }
+        $.get("/files", function(data, status){
+            console.log(data, status);
+            files = data.data;
+            for(f_info of files){
+                let ico = '<img src="'
+                if(f_info.type === 'pe'){
+                    ico += ico_dict['pe'];
+                }
+                else if(f_info.type === 'dir'){
+                    ico += ico_dict['dir'];
+                }
+                else if(f_info.type === 'bat'){
+                    ico += ico_dict['bat'];
+                }
+                else{
+                    ico += ico_dict['unk'];
+                }
+                ico += '" class="file-ico">'
+                
+                $('#file-list').append("<li class='list-group-item' onclick='list_group_item_click(this)' hash='"+f_info.hash+"' fname='"+f_info.fname+"'>"+ ico + f_info.fname +"</li>");
+            }
+        });
+    });
+</script>
+</html>

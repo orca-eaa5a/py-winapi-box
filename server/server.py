@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, json
 from flask_cors import CORS, cross_origin
 from agent_manager import AgentManager
 # from multiprocessing import Process
@@ -68,7 +68,12 @@ def execute(program):
     elif r == -1:
         return '400 Bad request'
     data = agent_man.action_queue[agent_man.ActionID.CREATE_PROCESS]['data'].pop(0)
-    return data
+    response = app.response_class(
+        response=json.dumps(data),
+        status=200,
+        mimetype='application/json'
+    )
+    return response
 
 @app.route('/log/<program>')
 def get_winapi(program):
@@ -97,8 +102,12 @@ def get_files():
     elif r == -1:
         return '400 Bad request'
     data = agent_man.action_queue[agent_man.ActionID.GET_FILES_LIST]['data'].pop(0)
-    
-    return data
+    response = app.response_class(
+        response=json.dumps(data),
+        status=200,
+        mimetype='application/json'
+    )
+    return response
 
 @app.route('/extract')
 def extract_files():
@@ -131,10 +140,13 @@ def halt_agent():
     data = agent_man.action_queue[agent_man.ActionID.HALT]['data'].pop(0)
     return data
 
+restart = False
+
 if __name__ == '__main__':
     agent_man = AgentManager()
     app.config['agent-man'] = agent_man
     # Process(target=agent_man.runserver, args=())
     listener = Thread(target=agent_man.runserver, args=())
     listener.start()
+    # app.debug = True
     app.run()

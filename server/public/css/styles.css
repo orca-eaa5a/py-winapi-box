@@ -2239,6 +2239,11 @@ progress {
   background-color: #e9ecef;
   opacity: 1;
 }
+.form-control.hashform:disabled{
+  background-color: #fff !important;
+  opacity: 1;
+}
+
 .form-control::-webkit-file-upload-button {
   padding: 0.75rem 1rem;
   margin: -0.75rem -1rem;
@@ -2771,7 +2776,27 @@ textarea.form-control-lg {
   white-space: nowrap;
   background-color: #e9ecef;
   border: 1px solid #ced4da;
-  border-radius: 0.25rem;
+  border-radius: 0.25rem 0rem 0rem 0.25rem !important;
+  min-width: 100px;
+}
+
+.input-group-copy{
+  display: flex;
+  align-items: center;
+  padding: 0rem 1rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #212529;
+  text-align: center;
+  white-space: nowrap;
+  background-color: #e9ecef;
+  border: 1px solid #ced4da;
+  border-radius: 0rem 0.25rem 0.25rem 0rem !important;
+}
+
+.input-group-copy:hover{
+  cursor: pointer;
 }
 
 .input-group-lg > .form-control,
@@ -5097,6 +5122,7 @@ textarea.form-control-lg {
   text-decoration: none;
   background-color: #fff;
   border: 1px solid rgba(0, 0, 0, 0.125);
+  transition: all 0.3s;
 }
 .list-group-item:first-child {
   border-top-left-radius: inherit;
@@ -5114,8 +5140,9 @@ textarea.form-control-lg {
 .list-group-item.active {
   z-index: 2;
   color: #fff;
-  background-color: #0d6efd;
-  border-color: #0d6efd;
+  background-color: #212529 !important;
+  border-color: #212529 !important;
+  /* border-color: #0d6efd; */
 }
 .list-group-item + .list-group-item {
   border-top-width: 0;
@@ -5123,6 +5150,11 @@ textarea.form-control-lg {
 .list-group-item + .list-group-item.active {
   margin-top: -1px;
   border-top-width: 1px;
+}
+
+.list-group-item:hover{
+  color:white;
+  background-color: #212529;
 }
 
 .list-group-horizontal {
