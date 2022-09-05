@@ -159,18 +159,19 @@
                     justify-content: end;
                     padding: 10px 0px 0px;">
                         <label for="target_exec" class="btn btn-primary btn-sm">파일 선택</label>
-                    <input style="display: none;" type="file" id="target_exec" name="target" onclick="execute_btn_click()">
+                    <input style="display: none;" type="file" id="target_exec" name="target" onchage="onFileSelected()">
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="modal_hide('#upload-modal')">Close</button>
-                    <button type="button" class="btn btn-primary">Save changes</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="modal_hide('#upload-modal')">취소</button>
+                    <button type="button" class="btn btn-primary" onclick="uploadSelectedFile('target_exec', 'target')">분석 파일 업로드</button>
                 </div>
             </div>
         </div>
     </div>
 
 </body>
+<script src="public/include/js/main.js"></script>
 <script src="public/include/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script>
     let files = null;

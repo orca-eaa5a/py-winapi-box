@@ -130,7 +130,7 @@ class Agent(object):
                 if recv_sz >= file_sz:
                     break
 
-            path = os.path.join(self.launch_path, data['fname'])
+            path = os.path.join(self.default_folder, data['fname'])
             try:
                 with open(path, 'wb') as f:
                     f.write(_bin)

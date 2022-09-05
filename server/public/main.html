@@ -16,6 +16,8 @@
         <link href="public/css/styles.css" rel="stylesheet" />
         <link href="public/css/main.css" rel="stylesheet" />
         <link href="public/include/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+
+        <script src="http://code.jquery.com/jquery-3.3.1.min.js"></script>
     </head>
     <body>
         <!-- Navigation-->
@@ -32,18 +34,22 @@
                     <div class="col-xl-6 justify-content-lg-center">
                         <div class="text-center text-white">
                             <h1 class="mb-6">Upload Executable to Analyze</h1>
-                            <form class="form-subscribe" id="contactForm" data-sb-form-api-token="API_TOKEN">
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <input class="form-control form-control-lg" id="selected_file_name" type="text" placeholder="File Path" />
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="target_exec" class="btn btn-primary btn-lg btn-fixed">파일 선택</label>
-                                        <input style="display: none;" type="file" id="target_exec" name="target" onchange="onFileSelected(this)">
-                                        <button class="btn btn-success btn-lg btn-fixed" style="margin-left: 5px;">업로드</button>
-                                    </div>
+                            
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <input class="form-control form-control-md" id="selected_file_name" type="text" placeholder="File Path" />
                                 </div>
-                            </form>
+                                <div class="col-md-4">
+                                    <form action="/upload" method="post" enctype="multipart/form-data">
+                                        <div class="row">
+                                            <label for="target_exec" class="btn btn-primary btn-md btn-fixed">파일 선택</label>
+                                        <input style="display: none;" type="file" id="target_exec" name="target" onchange="onFileSelected(this)">
+                                        <input class="btn btn-success btn-md btn-fixed" style="margin-left: 5px;" value="업로드" onclick="uploadSelectedFile('target_exec', 'target')">
+                                    </form>
+                                    </div>
+                                </div>                                    
+                            </div>
+                            
                         </div>
                     </div>
                 </div>

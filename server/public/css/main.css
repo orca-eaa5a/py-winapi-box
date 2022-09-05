@@ -38,7 +38,7 @@
 }
 
 .btn-fixed{
-    width: 130px;
+    width: 100px !important;
 }
 
 .files-list-card{

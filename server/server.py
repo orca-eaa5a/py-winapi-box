@@ -31,8 +31,7 @@ def go_main():
 def file_select():
     return render_template("upload.html")
 
-@app.route('/upload', methods=['POST', 'GET'])
-@cross_origin()
+@app.route('/upload', methods=['POST'])
 def upload():
     if request.method == 'POST':
         file = request.files['target']
@@ -88,7 +87,13 @@ def get_winapi(program):
     elif r == -1:
         return '400 Bad request'
     data = agent_man.action_queue[agent_man.ActionID.GET_RESULT]['data'].pop(0)
-    return data
+    response = app.response_class(
+        response=json.dumps(data),
+        status=200,
+        mimetype='application/json'
+    )
+    # data = agent_man.action_queue[agent_man.ActionID.GET_RESULT]['data'].pop(0)
+    return response
 
 @app.route('/files')
 def get_files():
@@ -145,6 +150,7 @@ restart = False
 if __name__ == '__main__':
     agent_man = AgentManager()
     app.config['agent-man'] = agent_man
+
     # Process(target=agent_man.runserver, args=())
     listener = Thread(target=agent_man.runserver, args=())
     listener.start()
