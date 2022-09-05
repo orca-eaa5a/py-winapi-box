@@ -1,7 +1,7 @@
 import os
 from flask import Flask, render_template, request, json
 from flask_cors import CORS, cross_origin
-from agent_manager import AgentManager
+from manager.agent_manager import AgentManager
 # from multiprocessing import Process
 from threading import Thread
 
