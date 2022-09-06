@@ -2202,6 +2202,7 @@ progress {
   border-radius: 0.25rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
+
 @media (prefers-reduced-motion: reduce) {
   .form-control {
     transition: none;
@@ -2779,6 +2780,7 @@ textarea.form-control-lg {
   border-radius: 0.25rem 0rem 0rem 0.25rem !important;
   min-width: 100px;
 }
+
 
 .input-group-copy{
   display: flex;

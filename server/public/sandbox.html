@@ -21,13 +21,13 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="#">Home</a>
+                        <a class="nav-link" aria-current="page" href="#">Home</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" onclick="modal_show('#upload-modal')" data-toggle="modal" href="#">Upload</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Sandbox</a>
+                        <a class="nav-link active" href="#">Sandbox</a>
                     </li>
                 </ul>
             </div>
@@ -40,13 +40,11 @@
                 <div class="card files-list-card">
                     <div class="card-header">
                         <h5 style="font-size:13pt; text-align: center; margin-bottom: 0px;">
-                            Files
+                            Sandbox List
                         </h5>
                     </div>
                     <div class="card-body" style="padding: 0 !important;">
-                        <ul id="file-list" class="list-group" style="border-radius: 0 !important;">
-                            
-                        </ul>
+                        <ul id="vbox-list" class="list-group" style="border-radius: 0 !important;"></ul>
                     </div>
                 </div>
             </div>
@@ -56,10 +54,10 @@
                         <form>
                             <div class="row">
                                 <div class="col">
-                                    <input id="target-file" class="form-control form-control-md" type="text">
+                                    <input id="target-vbox" class="form-control form-control-md" type="text">
                                 </div>
                                 <div class="col-auto">
-                                    <button type="button" class="btn btn-primary btn-md btn-fixed" onclick="execute_btn_click()">실행</button>
+                                    <button type="button" class="btn btn-primary btn-md btn-fixed" onclick="execute_btn_click()">불러오기</button>
                                 </div>
                             </div>
                         </form>
@@ -68,64 +66,69 @@
                                 <div class="card mt-3">
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-4">
-                                                <div class="input-group mb-3">
-                                                    <div class="input-group-prepend">
-                                                        <span class="input-group-text">File Name</span>
-                                                    </div>
-                                                    <span class="form-control" id="selectedFileName"></span>
-                                                </div>
-                                            </div>
-                                            
                                             <div class="col-3">
                                                 <div class="input-group mb-3">
                                                     <div class="input-group-prepend">
-                                                        <span class="input-group-text">File Type</span>
+                                                        <span class="input-group-text">동작</span>
                                                     </div>
-                                                    <span class="form-control" id="selectedFileType"></span>
+                                                    <span id="vbox-state" class="form-control"></span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-5">
+                                                <div class="input-group mb-3">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text">SnapShot 목록</span>
+                                                    </div>
+                                                    <select id="snapshot-select" class="form-control form-select">
+                                                        <option value="" selected>스냅샷 선택</option>
+                                                        <!-- <option value="1">One</option>
+                                                        <option value="2">Two</option>
+                                                        <option value="3">Three</option> -->
+                                                    </select>
+                                                    <span class="input-group-copy" onclick="hash_copy_to_clipboard()">
+                                                        <img src="public/assets/img/restart.png">
+                                                    </span>
                                                 </div>
                                             </div>
 
                                             <div class="col-4">
                                                 <div class="input-group mb-3">
                                                     <div class="input-group-prepend">
-                                                        <span class="input-group-text">File Size</span>
+                                                        <span class="input-group-text">SnapShot 생성</span>
                                                     </div>
-                                                    <span class="form-control" id="selectedFileSize"></span>
+                                                    <input class="form-control" type="text" id="new_snapsnot_name">
+                                                    <span class="input-group-copy d-flex justify-content-center">
+                                                        <img src="public/assets/img/instagram.png">
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="row">
-                                            <div class="col-6">
+                                            <div class="col-3">
                                                 <div class="input-group mb-3">
                                                     <div class="input-group-prepend">
-                                                        <span class="input-group-text">Ctime</span>
+                                                        <span class="input-group-text">실행 중지</span>
                                                     </div>
-                                                    <span class="form-control" id="selectedFileCtime"></span>
+                                                    <button type="button" class="btn btn-secondary">Pause</button>
+                                                    <span class="input-group-copy d-flex justify-content-center" style="background-color:#6c757d; border-color: #6c757d;">
+                                                        <img src="public/assets/img/pause.png">
+                                                    </span>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-6">
+                                            <div class="col-3">
                                                 <div class="input-group mb-3">
                                                     <div class="input-group-prepend">
-                                                        <span class="input-group-text">Mtime</span>
+                                                        <span class="input-group-text">실행 종료</span>
                                                     </div>
-                                                    <span class="form-control" id="selectedFileMtime"></span>
+                                                    <button type="button" class="btn btn-secondary">Stop</button>
+                                                    <span class="input-group-copy d-flex justify-content-center" style="background-color:#6c757d; border-color: #6c757d;">
+                                                        <img src="public/assets/img/halt.png">
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-8">
-                                                <div class="input-group">
-                                                    <div class="input-group-prepend">
-                                                        <span class="input-group-text">File Hash</span>
-                                                    </div>
-                                                    <input class="form-control hashform" id="selectedFileHash" disabled="true" value="">
-                                                    <span class="input-group-copy" onclick="hash_copy_to_clipboard()"><img src="public/assets/img/copy.png"></span>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        
                                     </div>
                                 </div>
                             </div>
@@ -183,129 +186,83 @@
         $(target).modal('hide')
     }
 
-    function render_json_with_input(input) {
-        var options = {
-            collapsed: $('#collapsed').is(':checked'),
-            rootCollapsable: $('#root-collapsable').is(':checked'),
-            withQuotes: $('#with-quotes').is(':checked'),
-            withLinks: $('#with-links').is(':checked')
-        };
-        try{
-            $('#json-viewer').jsonViewer(input, options);
-        }catch(err){
-            console.log(err);
-        }
-        
-        return null;
-    }
-
     function list_group_item_click(elem){
-        let file_hash = elem.getAttribute('hash');
-        for(child of $('#file-list').children()){
+        for(child of $('#sandbox-list').children()){
             if($(child).hasClass('active')){
                 $(child).removeClass('active');
                 break;
             }
         }
         $(elem).addClass('active');
-        $('#target-file').val(elem.getAttribute('fname'));
-        $('#target-file').attr('file-hash', file_hash);
-        
-        for(f of files){
-            if(f.hash === file_hash){
-                $('#selectedFileName').text(f.fname);
-                $('#selectedFileSize').text(f.size);
-                $('#selectedFileCtime').text(f.c_time);
-                $('#selectedFileMtime').text(f.m_time);
-                $('#selectedFileHash').attr('value', file_hash);
-                break;
-            }
-        }
-    }
-
-    function hash_copy_to_clipboard(){
-        $('#selectedFileHash').select();
-        document.execCommand('copy');
-        alert('hash value is copied to clipboard');
+        $('#target-vbox').val(elem.getAttribute('vbox-name'));
     }
 
     function execute_btn_click(){
-        let hash = $('#target-file').attr('file-hash');
-        let target_file = "";
-        for(f of files){
-            if(f.hash === hash){
-                target_file = f.fname;
-                break
-            }
-        }
-        if(!target_file){
-            alert('select file first');
+        let vbox_name = $('#target-vbox').val()
+        if(!vbox_name){
+            alert('select target vbox first');
             return;
         }
-        fetch("/exec/"+target_file)
+        fetch("/vbox/snapshots/"+vbox_name)
         .then((response) => response.json())
         .then((data) => {
-            if(data.success === true){
-                fetch("/log/" + target_file)
-                .then((response) => response.json())
-                .then((data) => {
-                    if(data.success === true){
-                        render_json_with_input(data.data);
-                    }
-                    else{
-                        alert("[localhost:5000/log/"+target_file+"] fail to get api log");
-                    }
-                });
+            for(snapshot of data.snapshots){
+                $('#snapshot-select').append(
+                    '<option value="'+snapshot+'">'+snapshot+'</option>'
+                )
+            }
+        });
+        fetch("/vbox/status/"+vbox_name)
+        .then((response) => response.json())
+        .then((data) => {
+            if(data.success){
+                let vbox_state = $('#vbox-state');
+                let old_state = $(vbox_state).text()
+                if(old_state === "running"){
+                    $(vbox_state).removeClass("vbox-running");
+                }
+                else if(old_state === "pause"){
+                    $(vbox_state).removeClass("vbox-pause");
+                }
+                else if(old_state === "powered off"){
+                    $(vbox_state).removeClass("vbox-off");
+                }
+
+                $(vbox_state).text(data.state)
+                if(data.state === "running"){
+                    $(vbox_state).addClass("vbox-running");
+                }
+                else if(data.state === "pause"){
+                    $(vbox_state).addClass("vbox-pause");
+                }
+                else if(data.state === "powered off"){
+                    $(vbox_state).addClass("vbox-off");
+                }
             }
             else{
-                alert("[localhost:5000/exec/"+target_file+"] fail to execute file");
+                alert('fail to get '+vbox_name+' info')
             }
-        })
-        
-        // $.get("/exec/"+target_file, function(data, status){
-        //     console.log(data, status);
-        //     if(status === 'success' && data.success == true){
-        //         $.get("/log"+target_file, function(data, status){
-        //             if(status === 'success' && data.success == true){
-        //                 render_json_with_input(data.data);
-        //             }
-        //             else{
-        //                 console.log('get log '+target_file+' failed');
-        //             }
-        //         });
-        //     }else{
-        //         console.log('execute '+target_file+' failed');
-        //     }
-        // });
+        });
     }
-
-    $(document).ready(function(){
-        let ico_dict = {
-            'pe': "public/assets/img/executable.png",
-            'dir': "public/assets/img/directory.png",
-            'bat': "public/assets/img/bat.png",
-            'unk': "public/assets/img/unk_file.png",
+    function escape(htmlStr) {
+        return htmlStr.replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");        
         }
-        $.get("/files", function(data, status){
-            console.log(data, status);
-            files = data.data;
-            for(f_info of files){
-                let ico = '<img src="'
-                if(f_info.type === 'pe'){
-                    ico += ico_dict['pe'];
-                }
-                else if(f_info.type === 'dir'){
-                    ico += ico_dict['dir'];
-                }
-                else if(f_info.type === 'bat'){
-                    ico += ico_dict['bat'];
-                }
-                else{
-                    ico += ico_dict['unk'];
-                }
-                ico += '" class="file-ico">'
-                
-                $('#file-list').append("<li class='list-group-item' onclick='list_group_item_click(this)' hash='"+f_info.hash+"' fname='"+f_info.fname+"'>"+ ico + f_info.fname +"</li>");
+    $(document).ready(function(){
+        // let ico_dict = {
+        //     'pe': "public/assets/img/executable.png",
+        //     'dir': "public/assets/img/directory.png",
+        //     'bat': "public/assets/img/bat.png",
+        //     'unk': "public/assets/img/unk_file.png",
+        // }
+        fetch('/vbox/list')
+        .then(response => response.json())
+        .then((data)=>{
+            for(vbox in data.vbox){
+                $('#vbox-list').append("<li class='list-group-item' onclick='list_group_item_click(this)' vbox-name='"+vbox+"'>"+ escape(vbox) +"</li>");
             }
         });
     });

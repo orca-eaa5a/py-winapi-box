@@ -93,3 +93,18 @@
 .file-ico{
     margin-right: 3px;
 }
+
+.vbox-running{
+    background-color: #28a745;
+    color: white
+}
+
+.vbox-pause{
+    color: #fff;
+    background-color: #6c757d;
+}
+
+.vbox-off{
+    color: #fff;
+    background-color: #343a40;
+}
