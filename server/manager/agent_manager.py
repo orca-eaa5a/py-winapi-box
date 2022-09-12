@@ -14,7 +14,7 @@ class AgentManager(object):
         GET_FILES_LIST=5
         EXTRACT_FILE=6
 
-    def __init__(self, server_ip='127.0.0.1', port=7011) -> None:
+    def __init__(self, server_ip='0.0.0.0', port=7011) -> None:
         self.action_queue = {
             AgentManager.ActionID.CREATE_FILE: {
                 'name': 'CREATE_FILE',
@@ -114,7 +114,7 @@ class AgentManager(object):
     def file_recv_socket(self, fname, port):
         _bin = b''
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as data_sock:
-            data_sock.bind(('127.0.0.1', port))
+            data_sock.bind(('0.0.0.0', port))
             data_sock.listen(1)
             data_conn, _addr = data_sock.accept()
             while True:
