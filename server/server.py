@@ -28,6 +28,10 @@ def go_board():
 def go_main():
     return render_template("main.html")
 
+@app.route('/about', methods=['GET'])
+def go_about():
+    return render_template("readme.html")
+
 @app.route('/sandbox', methods=['GET'])
 def go_sandbox():
     return render_template("sandbox.html")
