@@ -179,7 +179,26 @@ def get_vbox_status(vbox_name):
 
     return response
 
-@app.route('/vbox/snapshots/<vbox_name>')
+@app.route('/vbox/agent/status/<vbox_name>', methods=['GET'])
+def get_agent_status(vbox_name):
+    agent_man = app.config['agent-man']
+    data = {}
+    data['success'] = True
+    data['state'] = 'down'
+    if agent_man.connection:
+        if agent_man.connection.fileno() >= 1:
+            data['state'] = 'on'
+            data['success'] = True   
+
+    response = app.response_class(
+        response=json.dumps(data),
+        status=200,
+        mimetype='application/json'
+    )
+
+    return response
+
+@app.route('/vbox/snapshots/<vbox_name>', methods=['GET'])
 def get_snapshot_list(vbox_name):
     vbox_man = app.config['vbox-man']
     data = {}
@@ -194,6 +213,66 @@ def get_snapshot_list(vbox_name):
 
     return response
 
+@app.route('/vbox/snapshot/revert', methods=['POST'])
+def revert_snapshot():
+    vbox_man = app.config['vbox-man']
+    data = {}
+
+    params = request.get_json()
+    try:
+        if vbox_man.revertsnapsnot_vbox(params['vbox_name'], params['snapshot_name']):
+            data['vbox'] = params['vbox_name']
+            data['snapshot'] = params['snapshot_name']
+            data['success'] = True
+
+    except RevertMachineFailed as rmf:
+        data['success'] = False
+        data['err'] = str(rmf)
+    
+    except UnknownVBoxException as ue:
+        data['success'] = False
+        data['err'] = str(ue)
+    
+    except Exception as e:
+        print(e)
+
+    response = app.response_class(
+        response=json.dumps(data),
+        status=200,
+        mimetype='application/json'
+    )
+
+    return response
+
+@app.route('/vbox/snapshot/take', methods=['POST'])
+def take_snapshot():
+    vbox_man = app.config['vbox-man']
+    data = {}
+    params = request.get_json()
+
+    try:
+        if vbox_man.takesnapshot_vbox(params['vbox_name'], params['snapshot_name']):
+            data['success'] = True
+            data['vbox'] = params['vbox_name']
+            data['snapshot'] = params['snapshot_name']
+
+    except DuplicateShapsnot as ds:
+        data['success'] = False
+        data['err'] = 'snapshot name is duplcate'
+    
+    except UnknownVBoxException as ue:
+        data['success'] = False
+        data['err'] = str(ue)
+
+    response = app.response_class(
+                response=json.dumps(data),
+                status=200,
+                mimetype='application/json'
+            )
+
+    return response
+
+
 @app.route('/vbox/run/<vbox_name>', methods=['GET', 'POST'])
 def run_vbox(vbox_name):
     vbox_man = app.config['vbox-man']
@@ -203,7 +282,7 @@ def run_vbox(vbox_name):
         out['running'] = False
         if vbox_man.check_vbox_running(vbox_name):
             out['running'] = True
-        
+
     if request.method == 'POST':
         # launch vbox
         out = {}
@@ -212,6 +291,7 @@ def run_vbox(vbox_name):
         try:
             if vbox_man.launch_vbox(vbox_name):
                 out['success'] = True
+                out['state'] = 'running'
         except MachineAlreadyRunning as mar:
             out['err'] = "already running"
         except MachineNotExist as mne:
@@ -237,6 +317,7 @@ def resume_vbox(vbox_name):
         try:
             if vbox_man.resume_vbox(vbox_name):
                 out['success'] = True
+                out['state'] = 'running'
         except (MachineAlreadyRunning, ResumeMachineFailed) as mar:
             out['err'] = "already running"
         except MachineNotExist as mne:
@@ -262,6 +343,7 @@ def pause_vbox(vbox_name):
         try:
             if vbox_man.pause_vbox(vbox_name):
                 out['success'] = True
+                out['state'] = 'paused'
         except MachineAlreadyShutdown as mar:
             out['err'] = "already running"
         except MachineNotExist as mne:
@@ -287,6 +369,7 @@ def halt_vbox(vbox_name):
         try:
             if vbox_man.shutdown_vbox(vbox_name):
                 out['success'] = True
+                out['state'] = 'powered off'
         except MachineAlreadyRunning as mar:
             out['err'] = "already running"
         except MachineNotExist as mne:

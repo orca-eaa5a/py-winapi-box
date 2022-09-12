@@ -122,41 +122,20 @@ class VBoxManager(object):
 
     def pause_vbox(self, vbox_name):
         out, err = self.call_vbox_manager(options=["controlvm", vbox_name, "pause"])
-        e = err.decode("utf-8")        
-        if self.platform == "Windows":
-            e = e.replace("\r\n", "\n")
-            if e[-1] == "\n":
-                e = e[:-1]
+        e = err.decode("utf-8")
+        if not out and not e:
+            return True
+        else:
+            raise UnknownVBoxException(err)
 
-        if not "100%" in e and "error" in e:
-            if b'Could not find a registered machine' in err:
-                raise MachineNotExist(vbox_name)
-            elif b'not currently running' in err:
-                raise MachineIsNotRunning(vbox_name)
-            else:
-                raise UnknownVBoxException(err)
-
-        return True
 
     def resume_vbox(self, vbox_name):
         out, err = self.call_vbox_manager(options=["controlvm", vbox_name, "resume"])
-        e = err.decode("utf-8")        
-        if self.platform == "Windows":
-            e = e.replace("\r\n", "\n")
-            if e[-1] == "\n":
-                e = e[:-1]
-
-        if not "100%" in e and "error" in e:
-            if b'Could not find a registered machine' in err:
-                raise MachineNotExist(vbox_name)
-            elif b'not currently running' in err:
-                raise MachineIsNotRunning(vbox_name)
-            elif b'Cannot resume the machine as it is not paused' in err:
-                raise ResumeMachineFailed(err)
-            else:
-                raise UnknownVBoxException(err)
-
-        return True
+        e = err.decode("utf-8")
+        if not out and not e:
+            return True
+        else:
+            raise UnknownVBoxException(err)
 
     def get_snapshot_lsit(self, vbox_name):
         out, err = self.call_vbox_manager(options=["snapshot", vbox_name, "list"])
@@ -204,15 +183,15 @@ class VBoxManager(object):
         if not snapsnot_name:
             snapsnot_name = self.default_snapshot
         
-        if self.check_vbox_running():
-            self.shutdown_vbox()
-
-        if not self.check_snapshot_exist():
+        if not self.check_snapshot_exist(vbox_name, snapsnot_name):
             RevertMachineFailed(b'No target Snapshot')
+
+        if self.check_vbox_running(vbox_name):
+            self.shutdown_vbox(vbox_name)
 
         out, err = self.call_vbox_manager(options=["snapshot", vbox_name, "restore", snapsnot_name])
         if "Restoring snapshot '%s'" % snapsnot_name in out:
-            self.launch_vbox()
+            self.launch_vbox(vbox_name)
             return True
         
         raise UnknownVBoxException(err)

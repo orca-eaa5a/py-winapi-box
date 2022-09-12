@@ -86,7 +86,10 @@
                                                         <option value="2">Two</option>
                                                         <option value="3">Three</option> -->
                                                     </select>
-                                                    <span class="input-group-copy" onclick="hash_copy_to_clipboard()">
+                                                    <span class="input-group-copy" onclick="vm_revert_snapshot()" style="position: relative;">
+                                                        <div class="spinner-border text-dark" role="status" id="revert_spinner" style="position:absolute; right: 9px;">
+                                                            <span class="sr-only"></span>
+                                                        </div>
                                                         <img src="public/assets/img/restart.png">
                                                     </span>
                                                 </div>
@@ -98,7 +101,10 @@
                                                         <span class="input-group-text">SnapShot 생성</span>
                                                     </div>
                                                     <input class="form-control" type="text" id="new_snapsnot_name">
-                                                    <span class="input-group-copy d-flex justify-content-center">
+                                                    <span class="input-group-copy d-flex justify-content-center" onclick="vm_take_snapshot()">
+                                                        <div class="spinner-border text-dark" role="status" id="create_spinner" style="position:absolute">
+                                                            <span class="sr-only"></span>
+                                                        </div>
                                                         <img src="public/assets/img/instagram.png">
                                                     </span>
                                                 </div>
@@ -108,22 +114,42 @@
                                             <div class="col-3">
                                                 <div class="input-group mb-3">
                                                     <div class="input-group-prepend">
-                                                        <span class="input-group-text">실행 중지</span>
+                                                        <span class="input-group-text" id="vbox-ctrl-span1">실행 중지</span>
                                                     </div>
                                                     <button type="button" class="btn btn-secondary">Pause</button>
-                                                    <span class="input-group-copy d-flex justify-content-center" style="background-color:#6c757d; border-color: #6c757d;">
-                                                        <img src="public/assets/img/pause.png">
+                                                    <span class="input-group-copy d-flex justify-content-center" style="background-color:#6c757d; border-color: #6c757d;" onclick="vm_pause_ctrl()">
+                                                        <div class="spinner-border text-dark" role="status" id="pause_spinner" style="position:absolute">
+                                                            <span class="sr-only"></span>
+                                                        </div>
+                                                        <img id="vbox-ctrl-img1" src="public/assets/img/pause.png">
                                                     </span>
                                                 </div>
                                             </div>
                                             <div class="col-3">
                                                 <div class="input-group mb-3">
                                                     <div class="input-group-prepend">
-                                                        <span class="input-group-text">실행 종료</span>
+                                                        <span class="input-group-text" id="vbox-ctrl-span2">실행 종료</span>
                                                     </div>
                                                     <button type="button" class="btn btn-secondary">Stop</button>
-                                                    <span class="input-group-copy d-flex justify-content-center" style="background-color:#6c757d; border-color: #6c757d;">
-                                                        <img src="public/assets/img/halt.png">
+                                                    <span class="input-group-copy d-flex justify-content-center" style="background-color:#6c757d; border-color: #6c757d;" onclick="vm_start_ctrl()">
+                                                        <div class="spinner-border text-dark" role="status" id="stop_spinner" style="position:absolute">
+                                                            <span class="sr-only"></span>
+                                                        </div>
+                                                        <img id="vbox-ctrl-img2" src="public/assets/img/halt.png">
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div class="input-group mb-3">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text">Agent 상태</span>
+                                                    </div>
+                                                    <span id="agent-state" class="form-control"></span>
+                                                    <span class="input-group-copy" onclick="get_agent_state()" style="position: relative;">
+                                                        <div class="spinner-border text-dark" role="status" id="agent_spinner" style="position:absolute; right: 9px;">
+                                                            <span class="sr-only"></span>
+                                                        </div>
+                                                        <img src="public/assets/img/refresh.png">
                                                     </span>
                                                 </div>
                                             </div>
@@ -197,6 +223,50 @@
         $('#target-vbox').val(elem.getAttribute('vbox-name'));
     }
 
+    function start_spinner(spinner_id){
+        $('#'+spinner_id).show();
+    }
+    function stop_spinner(spinner_id){
+        $('#'+spinner_id).hide();
+    }
+
+    function update_vbox_state(new_state){
+        let vbox_state = $('#vbox-state');
+        let old_state = $(vbox_state).text()
+        if(old_state === "running"){
+            $(vbox_state).removeClass("vbox-running");
+        }
+        else if(old_state === "paused"){
+            $(vbox_state).removeClass("vbox-pause");
+        }
+        else if(old_state === "powered off" || old_state === "saved"){
+            $(vbox_state).removeClass("vbox-off");
+        }
+
+        $(vbox_state).text(new_state)
+        if(new_state === "running"){
+            $(vbox_state).addClass("vbox-running");
+            $("#vbox-ctrl-span1").text("실행 중지");
+            $("#vbox-ctrl-span2").text("실행 종료");
+            $("#vbox-ctrl-img1").attr('src', "/public/assets/img/pause.png");
+            $("#vbox-ctrl-img2").attr('src', "/public/assets/img/halt.png");
+        }
+        else if(new_state === "paused"){
+            $(vbox_state).addClass("vbox-pause");
+            $("#vbox-ctrl-span1").text("실행 재개");
+            $("#vbox-ctrl-span2").text("실행 종료");
+            $("#vbox-ctrl-img1").attr('src', "/public/assets/img/start.png");
+            $("#vbox-ctrl-img2").attr('src', "/public/assets/img/halt.png");
+        }
+        else if(new_state === "powered off" || new_state === "saved"){
+            $(vbox_state).addClass("vbox-off");
+            $("#vbox-ctrl-span1").text("사용 불가");
+            $("#vbox-ctrl-span2").text("실행");
+            $("#vbox-ctrl-img1").attr('src', "/public/assets/img/ban.png");
+            $("#vbox-ctrl-img2").attr('src', "/public/assets/img/start.png");
+        }
+    }
+
     function execute_btn_click(){
         let vbox_name = $('#target-vbox').val()
         if(!vbox_name){
@@ -216,34 +286,199 @@
         .then((response) => response.json())
         .then((data) => {
             if(data.success){
-                let vbox_state = $('#vbox-state');
-                let old_state = $(vbox_state).text()
-                if(old_state === "running"){
-                    $(vbox_state).removeClass("vbox-running");
-                }
-                else if(old_state === "pause"){
-                    $(vbox_state).removeClass("vbox-pause");
-                }
-                else if(old_state === "powered off"){
-                    $(vbox_state).removeClass("vbox-off");
-                }
-
-                $(vbox_state).text(data.state)
-                if(data.state === "running"){
-                    $(vbox_state).addClass("vbox-running");
-                }
-                else if(data.state === "pause"){
-                    $(vbox_state).addClass("vbox-pause");
-                }
-                else if(data.state === "powered off"){
-                    $(vbox_state).addClass("vbox-off");
-                }
+                update_vbox_state(data.state);
             }
             else{
                 alert('fail to get '+vbox_name+' info')
             }
         });
+        get_agent_state();
     }
+
+    function vm_pause_ctrl(){
+        let state = $('#vbox-state').text();
+        let vbox_name = $('#target-vbox').val()
+        start_spinner("pause_spinner");
+        if(state === "running"){
+            fetch("/vbox/pause/"+vbox_name,{
+                method: 'POST'
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if(data.success === true){
+                    stop_spinner("pause_spinner");
+                    update_vbox_state(data.state);
+                    alert("실행 중지 성공!");
+                }
+                else{
+                    alert("실행 중지 실패 : " + data.err);
+                }
+            });
+        }
+        else if(state === "paused"){
+            fetch("/vbox/resume/"+vbox_name,{
+                method: 'POST'
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if(data.success === true){
+                    alert("실행 재개 성공!");
+                    update_vbox_state(data.state);
+                }
+                else{
+                    alert("실행 재개 실패 : " + data.err);
+                }
+            });
+        }
+        else if(state === "powered off" || state === "saved"){
+            stop_spinner("pause_spinner");
+            alert("["+vbox_name+"] 가 종료상태입니다.")
+        }
+    }
+
+    function vm_start_ctrl(){
+        let state = $('#vbox-state').text();
+        let vbox_name = $('#target-vbox').val();
+        start_spinner("stop_spinner");
+        if(state === "running"){
+            fetch("/vbox/halt/"+vbox_name,{
+                method: 'POST'
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                stop_spinner("stop_spinner");
+                if(data.success === true){
+                    update_vbox_state(data.state);
+                    alert("실행 종료 성공!");
+                }
+                else{
+                    alert("실행 종료 실패 : " + data.err);
+                }
+            });
+        }
+        else if(state === "paused"){
+            fetch("/vbox/halt/"+vbox_name,{
+                method: 'POST'
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                stop_spinner("stop_spinner");
+                if(data.success === true){
+                    update_vbox_state(data.state);
+                    alert("실행 종료 성공!");
+                }
+                else{
+                    alert("실행 종료 실패 : " + data.err);
+                }
+            });
+        }
+        else if(state === "powered off" || state === "saved"){
+            fetch("/vbox/run/"+vbox_name,{
+                method: 'POST'
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                stop_spinner("stop_spinner");
+                if(data.success === true){
+                    update_vbox_state(data.state);
+                    alert("실행 성공!");
+                }
+                else{
+                    alert("실행 실패 : " + data.err);
+                }
+            });
+        }        
+    }
+
+    function vm_take_snapshot(){
+        let snapshot_name = $('#new_snapsnot_name').val();
+        let vbox_name = $('#target-vbox').val();
+        if(!(snapshot_name)){
+            snapshot_name = "";
+        }
+        start_spinner("create_spinner");
+        fetch("/vbox/snapshot/take", {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                vbox_name: vbox_name,
+                snapshot_name: snapshot_name
+            }),
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            stop_spinner("create_spinner");
+            if(data.success === true){
+                $('#snapshot-select').append(
+                    '<option value="'+snapshot_name+'">'+snapshot_name+'</option>'
+                );
+                alert("스냅샷 ["+snapshot_name+"] 생성 성공!");
+            }
+            else{
+                alert("스냅샷 생성 실패 : " + data.err);
+            }
+        });
+    }
+
+    function vm_revert_snapshot(){
+        let snapshot_name = $('#snapshot-select').val();
+        let vbox_name = $('#target-vbox').val();
+        start_spinner("revert_spinner");
+        fetch("/vbox/snapshot/revert", {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                vbox_name: vbox_name,
+                snapshot_name: snapshot_name
+            }),
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            stop_spinner("revert_spinner");
+            if(data.success === true){
+                alert("스냅샷 ["+snapshot_name+"] 되돌리기 성공!");
+            }
+            else{
+                alert("스냅샷 되돌리기 실패 : " + data.err);
+            }
+        });
+    }
+
+    function update_agent_state(new_state){
+        let agent_state = $('#agent-state');
+        let old_state = $(agent_state).text()
+        if(old_state === "on"){
+            $(agent_state).removeClass("vbox-running");
+        }
+        else if(old_state === "down"){
+            $(agent_state).removeClass("vbox-pause");
+        }
+
+        $(agent_state).text(new_state);
+
+        if(new_state === "on"){
+            $(agent_state).addClass("vbox-running");
+        }
+        else if(new_state === "down"){
+            $(agent_state).addClass("vbox-pause");
+        }
+    }
+
+    function get_agent_state(){
+        let vbox_name = $('#target-vbox').val();
+        fetch("/vbox/agent/status/" + vbox_name)
+        .then((response) => response.json())
+        .then((data) => {
+            if(data.success){
+                update_agent_state(data.state);
+            }
+        })
+    }
+
     function escape(htmlStr) {
         return htmlStr.replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
@@ -258,6 +493,12 @@
         //     'bat': "public/assets/img/bat.png",
         //     'unk': "public/assets/img/unk_file.png",
         // }
+        stop_spinner("create_spinner");
+        stop_spinner("revert_spinner");
+        stop_spinner("stop_spinner");
+        stop_spinner("pause_spinner");
+        stop_spinner("agent_spinner");
+
         fetch('/vbox/list')
         .then(response => response.json())
         .then((data)=>{
@@ -266,5 +507,6 @@
             }
         });
     });
+
 </script>
 </html>
